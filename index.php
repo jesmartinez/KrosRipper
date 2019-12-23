@@ -5,7 +5,7 @@
 
   $heroe = [];
 
-  $html = file_get_contents('https://web.archive.org/web/20190417190134/http://krosfinder.com/es/ed/botf/2');
+  $html = file_get_contents('https://web.archive.org/web/20190420145054/http://krosfinder.com/es/ed/ks4/4');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
@@ -49,14 +49,65 @@
   }
 
   //SETTING SPELLS:
+  echo "<br/>HECHIZOS";
   $arrayObj = [];
-  foreach ($qp->top('h4._visible-print ~ table') as $key=>$item) {
-    foreach ($item->children() as $key=>$spell) {
-      foreach ($spell->children() as $key=>$child) {
-        echo print_r($child->text()) . " - ";
+  foreach ($qp->top('h4._visible-print ~ table') as $keyParent=>$spell) {
+    foreach ($spell->find('tr') as $keyChild=>$tr) {
+      echo "<br/>[".$keyParent."/".$keyChild."]" . " <br/> ";
+      if ($keyChild === 1) {
+        //DESCRIPCIÓN DEL HECHIZO
+        //Link Transform
+        foreach($tr->find("a") as $link){
+          $link->removeAttr('data-content');
+          $link->removeAttr('data-toggle');
+          $link->removeAttr('sef');
+
+          $importantUrl = substr($link->attr('href'), strpos($link->attr('href'), "spell-effects"));
+          $link->attr('href', $importantUrl);
+        }
+        //Final result
+        echo $tr->html();
+      } else if($keyChild === 0) {
+        foreach($tr->children() as $keyTR=>$content){
+          if($keyTR === 0) {
+            //TODO: MEDIA TO CONVERT - Attack type
+            echo "https:".$content->firstChild()->attr('src');
+          } else if($keyTR === 1) {
+            //NOMBRE DEL HECHIZO
+            echo "<br/>".$content->find("strong")->first()->text();
+            //COSTE
+            echo "<br/>COSTE:";
+            $costs = [];
+            foreach($content->find(".pull-right strong") as $keyCost=>$cost){
+              $classname = str_replace("kf-ico kf-ico-", "", $cost->siblings()->first()->attr('class'));
+              $costs[$keyCost] = ["type"=>$classname, "cost"=>$cost->text()];
+            }
+            print_r($costs);
+          } else if($keyTR === 2) {
+            //PODER
+            $type = $classname = str_replace("damage ", "", $content->firstChild()->attr('class'));
+            echo "<br/>DAÑO:";
+            print_r(["dmg"=>$content->text(), "type"=>$type]);
+          }
+        }
       }
     }
   }
-  // print_r($arrayObj);
+
+
+  //POWERS:
+  echo "<br/>PODERES: ";
+  foreach ($qp->top('h4._visible-print ~ div.panel-info .panel-body') as $key=>$power) {
+    foreach($power->find("a") as $link){
+      //Link Transform
+      $link->removeAttr('data-content');
+      $link->removeAttr('data-toggle');
+      $link->removeAttr('sef');
+
+      $importantUrl = substr($link->attr('href'), strpos($link->attr('href'), "power"));
+      $link->attr('href', $importantUrl);
+    }
+    echo $power->html();
+  }
 
 ?>
