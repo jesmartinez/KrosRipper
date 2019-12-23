@@ -5,6 +5,10 @@ use QueryPath\QueryPath;
 
 function getHeroe($url){
     $html = file_get_contents($url);
+    //TODO: CATCH 404
+    if ($html === FALSE) {
+      return FALSE;
+    }
     $dom = new HTML5();
     $dom = $dom->loadHTML($html);
     $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));

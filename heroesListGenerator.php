@@ -18,6 +18,7 @@ function getList(){
       array_push($editionList, ["href" => $list->attr("href"), "edition"=>$list->attr("title"), "season"=>$season]);
     }
   }
+  // print_r($editionList);
   foreach ($editionList as $key => $edition) {
     print_r(getHeroeList($edition["href"]));
     // break; //SOLO POR QUE HAGA UNA VUELTA
@@ -31,14 +32,23 @@ function getHeroeList($url){
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
 
   $heroList = [];
+  $noHeroList = [];
 
   foreach($qp->top('table.table-bordered tr td a') as $hero) {
     $cleanUrl = substr($url, strpos($url, "krosfinder.com"));
     $cleanLink = substr($hero->attr("href"), strpos($hero->attr("href"), "krosfinder.com"));
     if ($cleanUrl !== $cleanLink) {
-      array_push($heroList, getHeroe($hero->attr("href")));
+        $thisHero = getHeroe($hero->attr("href"));
+        if ($thisHero) {
+          array_push($heroList, $thisHero);
+        } else {
+          array_push($noHeroList, $hero->attr("href"));
+        }
     }
   }
+  echo "<div style='background-color: palevioletred'>";
+  print_r($noHeroList);
+  echo "</div>";
   return $heroList;
 }
 
