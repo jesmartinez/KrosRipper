@@ -5,7 +5,7 @@
 
   $heroe = [];
 
-  $html = file_get_contents('https://web.archive.org/web/20190420145054/http://krosfinder.com/es/ed/ks4/4');
+  $html = file_get_contents('https://web.archive.org/web/20190421100022/http://krosfinder.com/es/ed/exf5/1');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
@@ -109,5 +109,27 @@
     }
     echo $power->html();
   }
+
+  //SUMMON:
+  echo "<br/>INVOCACIONES: ";
+  $summonList = [];
+  foreach ($qp->top('h4._visible-print ~ div.panel-deafult .panel-body') as $key=>$summon) {
+    foreach($summon->find("a") as $link){
+      //TODO: REVISAR LOS LINKS QUE ESTAN MAL COMO LOS DEL "Emperador Gelax"
+      $importantUrl = substr($link->attr('href'), strpos($link->attr('href'), "token"));
+      $link->attr("href", $importantUrl);
+      array_push($summonList, $link->attr("href"));
+    }
+  }
+  print_r($summonList);
+
+
+  //IMAGENES:
+  echo "<br/>IMAGENES: ";
+  $imgList = [];
+  foreach ($qp->top('h5.visible-print ~ img') as $key=>$img) {
+    array_push($imgList, $img->attr("src"));
+  }
+  print_r($imgList);
 
 ?>
