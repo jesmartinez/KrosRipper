@@ -1,0 +1,6 @@
+{
+    "require": {
+        "masterminds/html5": "^2.7",
+        "querypath/querypath": "^3.0"
+    }
+}
