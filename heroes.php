@@ -88,6 +88,4 @@ function getHeroe($url){
 
     return $heroe;
 }
-
-
 ?>
