@@ -4,6 +4,9 @@ use Masterminds\HTML5;
 use QueryPath\QueryPath;
 include_once "heroes.php";
 
+$GLOBALS["noHeroList"] = [];
+$GLOBALS["heroList"] = [];
+
 function getList(){
   $html = file_get_contents('https://web.archive.org/web/20190417190320/http://krosfinder.com/es/editions');
   $dom = new HTML5();
@@ -20,7 +23,7 @@ function getList(){
   }
   // print_r($editionList);
   foreach ($editionList as $key => $edition) {
-    print_r(getHeroeList($edition["href"]));
+    getHeroeList($edition["href"]);
     // break; //SOLO POR QUE HAGA UNA VUELTA
   }
 }
@@ -46,11 +49,18 @@ function getHeroeList($url){
         }
     }
   }
-  echo "<div style='background-color: palevioletred'>";
-  print_r($noHeroList);
-  echo "</div>";
-  return $heroList;
+  $GLOBALS["noHeroList"] = array_merge($GLOBALS["noHeroList"], $noHeroList);
+  $GLOBALS["heroList"] = array_merge($GLOBALS["heroList"], $heroList);
+  // return $heroList;
 }
 
 getList();
+echo json_encode($GLOBALS["heroList"]);
+
+$fp = fopen('success.json', 'w');
+fwrite($fp, json_encode($GLOBALS["heroList"]));
+fclose($fp);
+$fp = fopen('fail.json', 'w');
+fwrite($fp, json_encode($GLOBALS["noHeroList"]));
+fclose($fp);
 ?>

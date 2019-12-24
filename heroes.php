@@ -4,6 +4,11 @@ use Masterminds\HTML5;
 use QueryPath\QueryPath;
 
 function getHeroe($url){
+    $headers = get_headers($url);
+    $code = substr($headers[0], 9, 3);
+    if ($code == 404 || $code == 502) {
+      return FALSE;
+    }
     $html = file_get_contents($url);
     //TODO: CATCH 404
     if ($html === FALSE) {
@@ -23,6 +28,7 @@ function getHeroe($url){
     $heroe["powers"] = [];
     $heroe["summonList"] = [];
     $heroe["imageList"] = [];
+    $heroe["oldURL"] = $url;
     //END HEROE CONSTRUCT
 
     //SETTING NAME:
@@ -90,6 +96,57 @@ function getHeroe($url){
     }
     $heroe["imageList"] = $imgList;
 
+    //SETTING SPELLS:
+    // echo "<br/>HECHIZOS";
+    $arraySpells = [];
+    foreach ($qp->top('h4._visible-print ~ table') as $keyParent=>$spell) {
+      $arraySpells[$keyParent] = [];
+      foreach ($spell->find('tr') as $keyChild=>$tr) {
+        // echo "<br/>[".$keyParent."/".$keyChild."]" . " <br/> ";
+        if ($keyChild === 1) {
+          //DESCRIPCIÓN DEL HECHIZO
+          //Link Transform
+          foreach($tr->find("a") as $link){
+            $link->removeAttr('data-content');
+            $link->removeAttr('data-toggle');
+            $link->removeAttr('sef');
+
+            $importantUrl = substr($link->attr('href'), strpos($link->attr('href'), "spell-effects"));
+            $link->attr('href', $importantUrl);
+          }
+          //Final result
+          $arraySpells[$keyParent]["effects"] = $tr->html();
+        } else if($keyChild === 0) {
+          $arraySpells[$keyParent]["attr"] = [];
+          foreach($tr->children() as $keyTR=>$content){
+            if($keyTR === 0) {
+              //TODO: MEDIA TO CONVERT - Attack type
+              $arraySpells[$keyParent]["attr"]["typeMedia"] = "https:".$content->firstChild()->attr('src');
+            } else if($keyTR === 1) {
+              //NOMBRE DEL HECHIZO
+              $arraySpells[$keyParent]["attr"]["name"] = "<br/>".$content->find("strong")->first()->text();
+              //COSTE
+              // echo "<br/>COSTE:";
+              $costs = [];
+              foreach($content->find(".pull-right strong") as $keyCost=>$cost){
+                $classname = str_replace("kf-ico kf-ico-", "", $cost->siblings()->first()->attr('class'));
+                $costs[$keyCost] = ["type"=>$classname, "cost"=>$cost->text()];
+              }
+              $arraySpells[$keyParent]["attr"]["costs"] = $costs;
+              // print_r($costs);
+            } else if($keyTR === 2) {
+              //PODER
+              $type = $classname = str_replace("damage ", "", $content->firstChild()->attr('class'));
+              $arraySpells[$keyParent]["attr"]["damage"] = ["dmg"=>$content->text(), "type"=>$type];
+              // echo "<br/>DAÑO:";
+              // print_r(["dmg"=>$content->text(), "type"=>$type]);
+            }
+          }
+        }
+      }
+    }
+    $heroe["spells"] = $arraySpells;
+    
     return $heroe;
 }
 ?>
