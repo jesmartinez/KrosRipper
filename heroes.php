@@ -28,6 +28,7 @@ function getHeroe($url){
     $heroe["powers"] = [];
     $heroe["summonList"] = [];
     $heroe["imageList"] = [];
+    $heroe["figurineImage"] = "";
     $heroe["oldURL"] = $url;
     //END HEROE CONSTRUCT
 
@@ -96,6 +97,13 @@ function getHeroe($url){
     }
     $heroe["imageList"] = $imgList;
 
+    foreach ($qp->top('#headback img') as $key=>$img) {
+      if (strpos($img->attr("src"), "/figurine/") !== FALSE) {
+        $heroe["figurineImage"] = $img->attr("src");
+        break;
+      }
+    }
+
     //SETTING SPELLS:
     // echo "<br/>HECHIZOS";
     $arraySpells = [];
@@ -146,7 +154,7 @@ function getHeroe($url){
       }
     }
     $heroe["spells"] = $arraySpells;
-    
+
     return $heroe;
 }
 ?>
