@@ -146,7 +146,16 @@ function getHeroe($url){
       }
     }
     $heroe["spells"] = $arraySpells;
-    
+
+    getImages($qp->top('#headback img'));
+
     return $heroe;
+}
+
+function getImages($query){
+  foreach ($query as $key=>$img) {
+    echo $img->attr('src') . "<br/>";
+    array_push($GLOBALS["imgList"], $img->attr('src'));
+  }
 }
 ?>

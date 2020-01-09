@@ -6,6 +6,7 @@ include_once "heroes.php";
 
 $GLOBALS["noHeroList"] = [];
 $GLOBALS["heroList"] = [];
+$GLOBALS["imgList"] = [];
 
 function getList(){
   $html = file_get_contents('https://web.archive.org/web/20190417190320/http://krosfinder.com/es/editions');
@@ -24,7 +25,7 @@ function getList(){
   // print_r($editionList);
   foreach ($editionList as $key => $edition) {
     getHeroeList($edition["href"]);
-    // break; //SOLO POR QUE HAGA UNA VUELTA
+    break; //SOLO POR QUE HAGA UNA VUELTA
   }
 }
 
@@ -62,5 +63,8 @@ fwrite($fp, json_encode($GLOBALS["heroList"]));
 fclose($fp);
 $fp = fopen('fail.json', 'w');
 fwrite($fp, json_encode($GLOBALS["noHeroList"]));
+fclose($fp);
+$fp = fopen('images.json', 'w');
+fwrite($fp, json_encode($GLOBALS["imgList"]));
 fclose($fp);
 ?>
