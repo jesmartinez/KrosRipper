@@ -9,7 +9,8 @@ $GLOBALS["heroList"] = [];
 $GLOBALS["imgList"] = [];
 
 function getList(){
-  $html = file_get_contents('http://krosfinder.com/es/editions');
+  // $html = file_get_contents('http://krosfinder.com/es/editions');
+  $html = file_get_contents('http://web.archive.org/web/20191008041402/http://krosfinder.com/en/editions');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
@@ -25,7 +26,7 @@ function getList(){
   // print_r($editionList);
   foreach ($editionList as $key => $edition) {
     getHeroeList($edition["href"]);
-    break; //SOLO POR QUE HAGA UNA VUELTA
+    // break; //SOLO POR QUE HAGA UNA VUELTA
   }
 }
 

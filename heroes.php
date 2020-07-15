@@ -17,10 +17,13 @@ function getHeroe($url){
     $dom = new HTML5();
     $dom = $dom->loadHTML($html);
     $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
+    echo $url;
 
     //HEROE CONSTRUCT
     $heroe = [];
+    $heroe["id"] = "";
     $heroe["name"] = "";
+    $heroe["rarity"] = 0;
     $heroe["classes"] = [];
     $heroe["attributes"] = [];
     $heroe["description"] = "";
@@ -29,18 +32,42 @@ function getHeroe($url){
     $heroe["summonList"] = [];
     $heroe["imageList"] = [];
     $heroe["figurineImage"] = "";
+    $heroe["season"] = "";
+    $heroe["edition"] = "";
     $heroe["oldURL"] = $url;
+    $heroe["eternal"] = 0;
+    $heroe["legal"] = FALSE;
+
     //END HEROE CONSTRUCT
 
     //SETTING NAME:
     foreach ($qp->top('h1[class="kmname"]') as $item) {
       $heroe["name"] = $item->text();
     }
+    //SETTING SEASON, EDITION AND ID
+    foreach ($qp->top('ol[class="breadcrumb"] li a') as $item) {
+      if(strpos($item->attr("href"), "editions#"))
+        $heroe["season"] = substr($item->attr("href"), (strpos($item->attr("href"), "editions#") + 9));
+      elseif (strpos($item->attr("href"), "/ed/"))
+        $heroe["edition"] = substr($item->attr("href"), (strpos($item->attr("href"), "/ed/") + 4));
+    }
+    $heroe["id"] = $heroe["season"]."-".$heroe["edition"]."-".substr($url, strripos($url, "/")+1);
+
+    //SETTING RARITY
+    foreach ($qp->top('div[class="nameclr-1"]') as $item) {
+      $heroe["rarity"] = 3; //RARE - GOLD
+    }
+    foreach ($qp->top('div[class="nameclr-2"]') as $item) {
+      $heroe["rarity"] = 2; //UNCOMMON - WHITE
+    }
+    foreach ($qp->top('div[class="nameclr-3"]') as $item) {
+      $heroe["rarity"] = 1; //COMMON - BLACK
+    }
 
     //SETTING CLASSES:
     $classes = [];
     foreach ($qp->top('h1[class="kmname"] ~ div > a') as $key=>$item) {
-      $classes[$key] = ["name"=>$item->text(), "link"=>$item->attr('href')];
+      $classes[$key] = ["name"=>$item->text(), "link"=>substr($item->attr('href'), strripos($item->attr('href'), "/")+1)];
     }
     $heroe["classes"] = $classes;
 
@@ -52,11 +79,11 @@ function getHeroe($url){
     $arrayObj = array_reverse($arrayObj);
 
     $attributes = [];
-    $attributes[$arrayObj[0]] = $arrayObj[1];
-    $attributes[$arrayObj[2]] = $arrayObj[3];
-    $attributes[$arrayObj[4]] = $arrayObj[5];
-    $attributes[$arrayObj[6]] = $arrayObj[7];
-    $attributes[$arrayObj[8]] = $arrayObj[9];
+    $attributes["AP"] = $arrayObj[1];
+    $attributes["HP"] = $arrayObj[3];
+    $attributes["MP"] = $arrayObj[5];
+    $attributes["initiative"] = $arrayObj[7];
+    $attributes["level"] = $arrayObj[9];
     $heroe["attributes"] = $attributes;
 
     //SETTING DESCRIPTION:
@@ -75,7 +102,7 @@ function getHeroe($url){
         $importantUrl = substr($link->attr('href'), strpos($link->attr('href'), "power"));
         $link->attr('href', $importantUrl);
       }
-      $heroe["powers"] = $power->html();
+      $heroe["powers"] = $power->innerHTML();
     }
 
     //SUMMON:
@@ -93,13 +120,13 @@ function getHeroe($url){
     //IMAGENES:
     $imgList = [];
     foreach ($qp->top('h5.visible-print ~ img') as $key=>$img) {
-      array_push($imgList, $img->attr("src"));
+      array_push($imgList, substr($img->attr("src"), strripos($img->attr("src"), "/")));
     }
     $heroe["imageList"] = $imgList;
 
     foreach ($qp->top('#headback img') as $key=>$img) {
       if (strpos($img->attr("src"), "/figurine/") !== FALSE) {
-        $heroe["figurineImage"] = $img->attr("src");
+        $heroe["figurineImage"] = substr($img->attr("src"), strripos($img->attr("src"), "/"));
         break;
       }
     }
@@ -123,16 +150,25 @@ function getHeroe($url){
             $link->attr('href', $importantUrl);
           }
           //Final result
-          $arraySpells[$keyParent]["effects"] = $tr->html();
+          $arraySpells[$keyParent]["effects"] = $tr->find("td")->innerHTML();
         } else if($keyChild === 0) {
           $arraySpells[$keyParent]["attr"] = [];
           foreach($tr->children() as $keyTR=>$content){
             if($keyTR === 0) {
               //TODO: MEDIA TO CONVERT - Attack type
-              $arraySpells[$keyParent]["attr"]["typeMedia"] = "https:".$content->firstChild()->attr('src');
+              $rangeRaw = substr($content->firstChild()->attr('src'), strripos($content->firstChild()->attr('src'), "/")+1);
+              $rangeType = substr($rangeRaw,0,3);
+              $rangeNumber = "";
+              if (strlen($rangeRaw)>7) {
+                $rangeNumber = str_replace("_", " - ", substr($rangeRaw,4,-4));
+              }
+              $arraySpells[$keyParent]["attr"]["rangeType"] = $rangeType;
+              $arraySpells[$keyParent]["attr"]["rangeNumber"] = $rangeNumber;
+
             } else if($keyTR === 1) {
               //NOMBRE DEL HECHIZO
-              $arraySpells[$keyParent]["attr"]["name"] = "<br/>".$content->find("strong")->first()->text();
+              $arraySpells[$keyParent]["attr"]["name"] = $content->find("strong")->first()->text();
+              $arraySpells[$keyParent]["attr"]["useBG"] = $content->find("strong")->first()->parent()->attr("class");
               //COSTE
               // echo "<br/>COSTE:";
               $costs = [];
@@ -155,15 +191,23 @@ function getHeroe($url){
     }
     $heroe["spells"] = $arraySpells;
 
-    getImages($qp->top('#headback img'));
+    //SETTING LEGAL
+    $legalTypes = $qp->top('.panel.panel-default ul.list-group.card-lang');
+    if ($legalTypes->firstChild()->firstChild()->attr("class") == "text-success")
+      $heroe["eternal"] = count($legalTypes->firstChild()->lastChild()->children());
 
+    if ($legalTypes->lastChild()->firstChild()->attr("class") == "text-success")
+      $heroe["legal"] = TRUE;
+
+    getImages($qp->top('#headback img'));
+//list-group card-lang
     return $heroe;
 }
 
 function getImages($query){
   foreach ($query as $key=>$img) {
-    echo $img->attr('src') . "<br/>";
-    array_push($GLOBALS["imgList"], $img->attr('src'));
+    // echo $img->attr('src') . "<br/>";
+    array_push($GLOBALS["imgList"], substr($img->attr("src"), strripos($img->attr("src"), "/")));
   }
 }
 ?>
