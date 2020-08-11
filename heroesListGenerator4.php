@@ -10,7 +10,7 @@ $GLOBALS["imgList"] = [];
 
 function getList(){
   // $html = file_get_contents('http://krosfinder.com/es/editions');
-  $html = file_get_contents('https://web.archive.org/web/20191008052748/http://krosfinder.com/it/editions');
+  $html = file_get_contents('https://web.archive.org/web/20191008052808/http://krosfinder.com/ru/editions');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
@@ -59,13 +59,13 @@ function getHeroeList($url){
 getList();
 echo json_encode($GLOBALS["heroList"]);
 
-$fp = fopen('success.json', 'w');
+$fp = fopen('success4.json', 'w');
 fwrite($fp, json_encode($GLOBALS["heroList"]));
 fclose($fp);
-$fp = fopen('fail.json', 'w');
+$fp = fopen('fail4.json', 'w');
 fwrite($fp, json_encode($GLOBALS["noHeroList"]));
 fclose($fp);
-$fp = fopen('images.json', 'w');
+$fp = fopen('images4.json', 'w');
 fwrite($fp, json_encode($GLOBALS["imgList"]));
 fclose($fp);
 ?>

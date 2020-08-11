@@ -207,7 +207,7 @@ function getHeroe($url){
 function getImages($query){
   foreach ($query as $key=>$img) {
     // echo $img->attr('src') . "<br/>";
-    array_push($GLOBALS["imgList"], substr($img->attr("src"), strripos($img->attr("src"), "/")));
+  array_push($GLOBALS["imgList"], $img->attr("src")/*substr($img->attr("src"), strripos($img->attr("src"), "/"))*/);
   }
 }
 ?>

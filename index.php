@@ -5,7 +5,7 @@
 
   $heroe = [];
 
-  $html = file_get_contents('https://web.archive.org/web/20190421100022/http://krosfinder.com/es/ed/exf5/1');
+  $html = file_get_contents('https://web.archive.org/web/20191008052737/http://krosfinder.com/fr/editions');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
