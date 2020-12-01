@@ -10,7 +10,7 @@ $GLOBALS["imgList"] = [];
 
 function getList(){
   // $html = file_get_contents('http://krosfinder.com/es/editions');
-  $html = file_get_contents('https://web.archive.org/web/20191008052748/http://krosfinder.com/it/editions');
+  $html = file_get_contents('https://web.archive.org/web/20191008041402/http://krosfinder.com/en/editions');
   $dom = new HTML5();
   $dom = $dom->loadHTML($html);
   $qp = qp($dom, NULL, array('ignore_parser_warnings' => TRUE));
